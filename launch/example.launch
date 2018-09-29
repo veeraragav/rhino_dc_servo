@@ -1,0 +1,8 @@
+<launch>
+  <rosparam file="$(find rhino_dc_servo)/config/settings.yaml" command="load"/>
+  <node
+    name="motor"
+    pkg="rhino_dc_servo"
+    type="servomotor.py"
+    />
+</launch>

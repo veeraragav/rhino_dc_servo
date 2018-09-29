@@ -1,0 +1,25 @@
+<launch>
+  <rosparam file="$(find rhino_dc_servo)/config/differential_settings.yaml" command="load"/>
+  <node
+    name="left_motor"
+    pkg="rhino_dc_servo"
+    type="servomotor.py"
+    ns="left"
+    />
+    <node
+      name="right_motor"
+      pkg="rhino_dc_servo"
+      type="servomotor.py"
+      ns="right"
+      />
+      <node
+        name="odometry_node"
+        pkg="rhino_dc_servo"
+        type="differential_odometry.py"
+        />
+        <node
+          name="cmdvel_to_wheelvel"
+          pkg="rhino_dc_servo"
+          type="cmdvel_to_wheelvelocity.py"
+          />
+</launch>

@@ -1,0 +1,2 @@
+port: /dev/ttyUSB0
+rpm: 200
