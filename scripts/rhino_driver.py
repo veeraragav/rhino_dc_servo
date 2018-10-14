@@ -1,7 +1,39 @@
+"""
+    BSD 3-Clause License
+
+    Copyright (c) 2018, Veera Ragav
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
 #!/usr/bin/env	python
 import serial
 import rospy
 import time
+import six
 class ServoMotor:
     __port = ''
     __ser = serial.Serial(timeout=1)
@@ -31,7 +63,7 @@ class ServoMotor:
         return self.d
 
     def writeMotorSpeed(self, speed):
-        rospy.loginfo('S'+str(int(speed)))
+        rospy.logdebug('S'+str(int(speed)))
         ServoMotor.__ser.flushOutput()
         ServoMotor.__ser.write('S'+str(int(speed)))
         ServoMotor.__ser.flushInput()
@@ -96,17 +128,21 @@ class ServoMotor:
             ServoMotor.__ser.write('P\r')
             try:
                 self.d = ServoMotor.__ser.readline()
+                #rospy.loginfo(self.d)
                 self.d = str(self.d)
                 self.p = self.d.find('P')
                 self.q = self.d.find(' ')
             except:
-                pass
+                return 0
         try:
             self.d = self.d[self.p + 1 : self.q]
             self.d = int(self.d)
+            #rospy.loginfo(self.d)
+            if not self.d or isinstance(self.d, six.string_types):
+                return 0
             return self.d
         except:
-            pass
+            return 0
 
     def setPositionEncoder(self, encoder):
         try:
@@ -128,7 +164,7 @@ class ServoMotor:
 
     def setAbsolutePostion(self, position):
         try:
-            rospy.loginfo('G'+str(int(position)))
+            rospy.logdebug('G'+str(int(position)))
             ServoMotor.__ser.flushOutput()
             ServoMotor.__ser.write('G'+str(int(position)))
             ServoMotor.__ser.flushInput()
@@ -137,7 +173,7 @@ class ServoMotor:
 
     def setRelativePostion(self, position):
         try:
-            rospy.loginfo('R'+str(int(position)))
+            rospy.logdebug('R'+str(int(position)))
             ServoMotor.__ser.flushOutput()
             ServoMotor.__ser.write('R'+str(int(position)))
             ServoMotor.__ser.flushInput()
