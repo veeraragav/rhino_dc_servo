@@ -2,7 +2,7 @@
 /right/port: /dev/ttyUSB1
 /left/rpm: 200
 /right/rpm: 200
-/wheel_radius: 0.05
-/robot_width: 0.525
+/wheel_radius: 0.0525
+/robot_width: 0.52
 /left/rate: 5
 /right/rate: 5

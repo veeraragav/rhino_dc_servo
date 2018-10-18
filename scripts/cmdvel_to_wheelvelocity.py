@@ -38,7 +38,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
 radius = rospy.get_param(rospy.get_namespace() + 'wheel_radius', 0.05)
-width = rospy.get_param(rospy.get_namespace() + 'robot_width', 0.525)
+width = rospy.get_param(rospy.get_namespace() + 'robot_width', 0.52)
 
 class WheelVelocity:
 
