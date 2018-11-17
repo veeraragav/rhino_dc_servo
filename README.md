@@ -1,5 +1,5 @@
 #rhino_dc_servo
-This is a ROS package for Rhino DC Servo Motor. Please refer the datasheet of the motor which is included in the package before proceeding further. This package uses serial communication to control the motor. It requires a USB-to-UART converter to interface the motor with a computer.
+* This is a ROS package for Rhino DC Servo Motor. Please refer the datasheet of the motor which is included in the package before proceeding further. This package uses serial communication to control the motor. It requires a USB-to-UART converter to interface the motor with a computer.
 
 ##Procedure:
 * Set the `port` and `rpm` of the motor in `config/settings.yaml` file.
