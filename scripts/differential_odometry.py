@@ -111,7 +111,7 @@ class DiffTf:
         self.ticks_meter = float(rospy.get_param('ticks_meter', 5456.72815))  # The number of wheel encoder ticks per meter of travel, ticks per rotation / (2*pi*r)
         self.base_width = float(rospy.get_param('base_width', 0.52)) # The wheel base width in meters
 
-        self.base_frame_id = rospy.get_param('~base_frame_id','base_footprint') # the name of the base frame of the robot
+        self.base_frame_id = rospy.get_param('~base_frame_id','base_link') # the name of the base frame of the robot
         self.odom_frame_id = rospy.get_param('~odom_frame_id', 'odom') # the name of the odometry reference frame
 
         self.encoder_min = rospy.get_param('encoder_min', -2147483648)

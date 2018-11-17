@@ -54,6 +54,8 @@ class Rhino:
         Rhino.__myMotor.openSerialPort()
         Rhino.__myMotor.isAvailable()
 
+        self.maxSpeed = Rhino.__myMotor.getMaxMotorSpeed()
+
         #setting up subscribers
         rospy.Subscriber('motor_speed', Float64, self.setSpeed)
         rospy.Subscriber('absolute_cmd', Float64, self.setAbsolute)
@@ -92,7 +94,7 @@ class Rhino:
 
     def setSpeed(self, msg):
         rospy.loginfo(msg)
-        self.speed = msg.data * 9.5492965855137 * 65000 /Rhino.__rpm /Rhino.__myMotor.getMaxMotorSpeed()
+        self.speed = msg.data * 9.5492965855137 * 65000 /Rhino.__rpm /self.maxSpeed #255
         Rhino.__myMotor.writeMotorSpeed(self.speed)
 
     def setAbsolute(self, msg):
