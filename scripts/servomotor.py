@@ -33,6 +33,7 @@
 """
 
 import rospy
+import swri_rospy
 from rhino_driver import ServoMotor
 import serial
 from std_msgs.msg import Int32
@@ -41,119 +42,126 @@ from std_msgs.msg import UInt16
 from rhino_dc_servo.srv import *
 
 class Rhino:
-    #instance of servomotor on a specified port
-    __myMotor = ServoMotor(rospy.get_param(rospy.get_namespace() + 'port', '/dev/ttyUSB0'))
-    __rpm = rospy.get_param(rospy.get_namespace() + 'rpm', 200)
     #constructor
     def __init__(self):
         rospy.init_node('motor', anonymous=True)
 
+        #get params
+        self.myMotor = ServoMotor(rospy.get_param(rospy.get_namespace() + 'port', '/dev/ttyUSB0'))
+        self.rpm = rospy.get_param(rospy.get_namespace() + 'rpm', 200)
+        self.r = rospy.get_param(rospy.get_namespace() + 'rate', 5)
+
         #setting up encoder data publisher
         self.encoder_pub = rospy.Publisher('encoderTicks', Int32, queue_size=10)
+        swri_rospy.Timer(rospy.Duration(1.0/self.r), self.update) #TODO: Use rate parameter
 
-        Rhino.__myMotor.openSerialPort()
-        Rhino.__myMotor.isAvailable()
+        self.myMotor.openSerialPort()
+        self.myMotor.isAvailable()
 
-        self.maxSpeed = Rhino.__myMotor.getMaxMotorSpeed()
+        self.maxSpeed = self.myMotor.getMaxMotorSpeed()
 
         #setting up subscribers
-        rospy.Subscriber('motor_speed', Float64, self.setSpeed)
-        rospy.Subscriber('absolute_cmd', Float64, self.setAbsolute)
-        rospy.Subscriber('relative_cmd', Float64, self.setRelative)
+        swri_rospy.Subscriber('motor_speed', Float64, self.setSpeed)
+        swri_rospy.Subscriber('absolute_cmd', Float64, self.setAbsolute)
+        swri_rospy.Subscriber('relative_cmd', Float64, self.setRelative)
 
         #setting up services
-        self.read_damping = rospy.Service('read_damping', readDamping, self.dampingRead)
-        self.write_damping = rospy.Service('write_damping', writeDamping, self.dampingWrite)
-        self.load_factory_settings = rospy.Service('load_factory_settings', loadFactorySettings, self.loadFactory)
-        self.set_position_encoder = rospy.Service('set_position_encoder', setPositionEncoder, self.setPositionEnc)
-        self.get_absolute_position = rospy.Service('get_absolute_position', getAbsolutePosition, self.getAbsPos)
-        self.set_feedback_gain = rospy.Service('set_feedback_gain', setFeedbackGain, self.setFG)
-        self.get_feedback_gain = rospy.Service('get_feedback_gain', getFeedbackGain, self.getFG)
-        self.set_proportionate_gain = rospy.Service('set_proportionate_gain', setProportionateGain, self.setPG)
-        self.get_proportionate_gain = rospy.Service('get_proportionate_gain', getProportionateGain, self.getPG)
-        self.get_integral_gain = rospy.Service('get_integral_gain', getIntegralGain, self.getIG)
-        self.set_integral_gain = rospy.Service('set_integral_gain', setIntegralGain, self.setIG)
-        self.set_max_motor_speed = rospy.Service('set_max_motor_speed', setMaxMotorSpeed, self.setMaxSpeed )
-        get_max_motor_speed = rospy.Service('get_max_motor_speed', getMaxMotorSpeed, self.getMaxSpeed)
-        self.auto_calibrate = rospy.Service('auto_calibrate', autoCalibrate, self.autoC)
+        self.read_damping = swri_rospy.Service('read_damping', readDamping, self.dampingRead)
+        self.write_damping = swri_rospy.Service('write_damping', writeDamping, self.dampingWrite)
+        self.load_factory_settings = swri_rospy.Service('load_factory_settings', loadFactorySettings, self.loadFactory)
+        self.set_position_encoder = swri_rospy.Service('set_position_encoder', setPositionEncoder, self.setPositionEnc)
+        self.get_absolute_position = swri_rospy.Service('get_absolute_position', getAbsolutePosition, self.getAbsPos)
+        self.set_feedback_gain = swri_rospy.Service('set_feedback_gain', setFeedbackGain, self.setFG)
+        self.get_feedback_gain = swri_rospy.Service('get_feedback_gain', getFeedbackGain, self.getFG)
+        self.set_proportionate_gain = swri_rospy.Service('set_proportionate_gain', setProportionateGain, self.setPG)
+        self.get_proportionate_gain = swri_rospy.Service('get_proportionate_gain', getProportionateGain, self.getPG)
+        self.get_integral_gain = swri_rospy.Service('get_integral_gain', getIntegralGain, self.getIG)
+        self.set_integral_gain = swri_rospy.Service('set_integral_gain', setIntegralGain, self.setIG)
+        self.set_max_motor_speed = swri_rospy.Service('set_max_motor_speed', setMaxMotorSpeed, self.setMaxSpeed )
+        self.get_max_motor_speed = swri_rospy.Service('get_max_motor_speed', getMaxMotorSpeed, self.getMaxSpeed)
+        self.auto_calibrate = swri_rospy.Service('auto_calibrate', autoCalibrate, self.autoC)
 
-    def spin(self):
-        r = rospy.Rate(rospy.get_param(rospy.get_namespace() + 'rate', 5))
-        while not rospy.is_shutdown():
-            self.update()
-            r.sleep()
+        #self.setup()
 
-    def update(self):
-        self.data = Int32()
-        self.data.data = Rhino.__myMotor.getPositionEncoder()
-        if self.data.data:
-            self.encoder_pub.publish(self.data)
+    def update(self, event):
+        data = Int32()
+        data.data = self.myMotor.getPositionEncoder()
+        if data.data != None :
+            self.encoder_pub.publish(data)
 
     def __del__(self):
-        Rhino.__myMotor.closeSerialPort()
+        self.myMotor.closeSerialPort()
 
     def setSpeed(self, msg):
-        rospy.loginfo(msg)
-        self.speed = msg.data * 9.5492965855137 * 65000 /Rhino.__rpm /self.maxSpeed #255
-        Rhino.__myMotor.writeMotorSpeed(self.speed)
+        #rospy.loginfo(msg)
+        speed = msg.data * 9.5492965855137 * 65000 /self.rpm /self.maxSpeed #255
+        self.myMotor.writeMotorSpeed(speed)
 
     def setAbsolute(self, msg):
-        self.position = msg.data * 286.4788976
-        Rhino.__myMotor.setAbsolutePostion(self.position)
+        position = msg.data * 286.4788976
+        self.myMotor.setAbsolutePostion(position)
 
     def setRelative(self, msg):
-        self.position = msg.data * 286.4788976
-        Rhino.__myMotor.setRelativePostion(self.position)
+        position = msg.data * 286.4788976
+        self.myMotor.setRelativePostion(position)
 
     def dampingRead(self, request):
-        return readDampingResponse(Rhino.__myMotor.readDamping())
+        return readDampingResponse(self.myMotor.readDamping())
 
     def dampingWrite(self, request):
-        Rhino.__myMotor.writeDamping(request.damp)
+        self.myMotor.writeDamping(request.damp)
         return []
 
     def loadFactory(self, request):
-        Rhino.__myMotor.loadFactorySettings()
+        self.myMotor.loadFactorySettings()
         return []
 
     def setPositionEnc(self, request):
-        Rhino.__myMotor.setPositionEncoder(request.encoder)
+        self.myMotor.setPositionEncoder(request.encoder)
         return []
 
     def getAbsPos(self, request):
-        return getAbsolutePositionResponse(Rhino.__myMotor.getAbsolutePostion())
+        return getAbsolutePositionResponse(self.myMotor.getAbsolutePostion())
 
     def setFG(self, request):
-        Rhino.__myMotor.setFeedbackGain(request.gain)
+        self.myMotor.setFeedbackGain(request.gain)
         return []
 
     def getFG(self, request):
-        return getFeedbackGainResponse(Rhino.__myMotor.getFeedbackGain())
+        return getFeedbackGainResponse(self.myMotor.getFeedbackGain())
 
     def setPG(self, request):
-        Rhino.__myMotor.setProportionateGain(request.pgain)
+        self.myMotor.setProportionateGain(request.pgain)
         return []
 
     def getPG(self, request):
-        return getProportionateGainResponse(Rhino.__myMotor.getProportionateGain())
+        return getProportionateGainResponse(self.myMotor.getProportionateGain())
 
     def setIG(self, request):
-        Rhino.__myMotor.setIntegralGain(request.igain)
+        self.myMotor.setIntegralGain(request.igain)
         return []
 
     def getIG(self, request):
-        return getIntegralGainResponse(Rhino.__myMotor.getIntegralGain())
+        return getIntegralGainResponse(self.myMotor.getIntegralGain())
 
     def setMaxSpeed(self, request):
-        Rhino.__myMotor.setMaxMotorSpeed(request.mspeed)
+        self.myMotor.setMaxMotorSpeed(request.mspeed)
         return []
 
     def getMaxSpeed(self, request):
-        return getMaxMotorSpeedResponse(Rhino.__myMotor.getMaxMotorSpeed())
+        return getMaxMotorSpeedResponse(self.myMotor.getMaxMotorSpeed())
 
     def autoC(self, request):
-        Rhino.__myMotor.autoCalibrate()
+        self.myMotor.autoCalibrate()
         return []
+
+    def setup(self):
+        #set damping = 0, max_speed=255
+        self.myMotor.writeDamping(0)
+        self.myMotor.setMaxMotorSpeed(255)
+
+
 if __name__ == '__main__':
     a = Rhino()
-    a.spin()
+   # a.setup()
+    swri_rospy.spin()

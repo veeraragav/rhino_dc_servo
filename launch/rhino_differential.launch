@@ -36,21 +36,29 @@
     pkg="rhino_dc_servo"
     type="servomotor.py"
     ns="left"
+    output="screen"
     />
     <node
       name="right_motor"
       pkg="rhino_dc_servo"
       type="servomotor.py"
       ns="right"
+      output="screen"
       />
       <node
         name="odometry_node"
         pkg="rhino_dc_servo"
         type="differential_odometry.py"
+        output="screen"
         />
         <node
           name="cmdvel_to_wheelvel"
           pkg="rhino_dc_servo"
           type="cmdvel_to_wheelvelocity.py"
+          output="screen"
           />
+
+            <!-- start rviz -->
+  <node pkg="rviz" type="rviz" name="my_rviz" 
+  args="-d $(find robot_base)/config.rviz"/>
 </launch>

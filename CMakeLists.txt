@@ -125,6 +125,7 @@ catkin_package(
 #  LIBRARIES rhino_dc_servo
 #  CATKIN_DEPENDS message_generation rospy std_msgs
 #  DEPENDS system_lib
+CATKIN_DEPENDS message_runtime
 )
 
 ###########
