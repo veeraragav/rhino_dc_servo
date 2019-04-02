@@ -37,8 +37,8 @@
 import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Float64
-radius = rospy.get_param(rospy.get_namespace() + 'wheel_radius', 0.05)
-width = rospy.get_param(rospy.get_namespace() + 'robot_width', 0.52)
+wheel_radius = rospy.get_param(rospy.get_namespace() + 'wheel_radius', 0.05)
+robot_width = rospy.get_param(rospy.get_namespace() + 'robot_width', 0.52)
 
 class WheelVelocity:
 
@@ -48,9 +48,9 @@ class WheelVelocity:
         self.left_pub = rospy.Publisher('/left/motor_speed', Float64, queue_size=10)
         self.right_pub = rospy.Publisher('/right/motor_speed', Float64, queue_size=10)
 
-    def fcn(self, msg):
-        self.left_speed = -1 * (msg.linear.x - msg.angular.z*width/2) / radius
-    	self.right_speed = (msg.linear.x + msg.angular.z*width/2) / radius
+    def fcn(self, twist):
+        self.left_speed = -1 * ((2*twist.linear.x) - (twist.angular.z*robot_width)) / (2*wheel_radius) #rad/s
+    	self.right_speed = ((2*twist.linear.x) + (twist.angular.z*robot_width)) / (2*wheel_radius)
         self.left_pub.publish(self.left_speed)
         self.right_pub.publish(self.right_speed)
 
