@@ -171,8 +171,8 @@ class DiffTf:
                     d_left = 0
                     d_right = 0
                 else:
-                    d_left = -1 * (self.left - self.enc_left) / self.ticks_meter
-                    d_right = (self.right - self.enc_right) / self.ticks_meter
+                    d_left =  -1 * (self.left - self.enc_left) / self.ticks_meter
+                    d_right =  (self.right - self.enc_right) / self.ticks_meter
                 self.enc_left = self.left
                 self.enc_right = self.right
 

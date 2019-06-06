@@ -1,5 +1,5 @@
-/left/port: /dev/ttyUSB1
-/right/port: /dev/ttyUSB0
+/left/port: /dev/ttyUSB0
+/right/port: /dev/ttyUSB1
 /left/rpm: 200
 /right/rpm: 200
 /wheel_radius: 0.0525

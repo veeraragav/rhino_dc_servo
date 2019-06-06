@@ -49,7 +49,7 @@ class Rhino:
         #get params
         self.myMotor = ServoMotor(rospy.get_param(rospy.get_namespace() + 'port', '/dev/ttyUSB0'))
         self.rpm = rospy.get_param(rospy.get_namespace() + 'rpm', 200)
-        self.r = rospy.get_param(rospy.get_namespace() + 'rate', 5)
+        self.r = rospy.get_param(rospy.get_namespace() + 'rate', 10)
 
         #setting up encoder data publisher
         self.encoder_pub = rospy.Publisher('encoderTicks', Int32, queue_size=10)

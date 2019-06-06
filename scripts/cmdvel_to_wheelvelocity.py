@@ -49,8 +49,8 @@ class WheelVelocity:
         self.right_pub = rospy.Publisher('/right/motor_speed', Float64, queue_size=10)
 
     def fcn(self, twist):
-        self.left_speed = -1 * ((2*twist.linear.x) - (twist.angular.z*robot_width)) / (2*wheel_radius) #rad/s
-    	self.right_speed = ((2*twist.linear.x) + (twist.angular.z*robot_width)) / (2*wheel_radius)
+        self.left_speed =  -1 * ((2*twist.linear.x) - (twist.angular.z*robot_width)) / (2*wheel_radius) #rad/s
+    	self.right_speed =  ((2*twist.linear.x) + (twist.angular.z*robot_width)) / (2*wheel_radius)
         self.left_pub.publish(self.left_speed)
         self.right_pub.publish(self.right_speed)
 
