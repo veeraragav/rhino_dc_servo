@@ -87,7 +87,7 @@ diff_controller.py - controller for a differential drive
 #import roslib
 #roslib.load_manifest('differential_drive')
 from math import cos, pi, sin
-
+import swri_rospy
 import rospy
 from geometry_msgs.msg import Quaternion, Twist
 from nav_msgs.msg import Odometry
@@ -141,89 +141,97 @@ class DiffTf:
         self.new_dataR = False
 
         # subscriptions
-        rospy.Subscriber("/left/encoderTicks", Int32, self.lwheelCallback)
-        rospy.Subscriber("/right/encoderTicks", Int32, self.rwheelCallback)
+        swri_rospy.Subscriber("/left/encoderTicks", Int32, self.lwheelCallback)
+        swri_rospy.Subscriber("/right/encoderTicks", Int32, self.rwheelCallback)
+        swri_rospy.Subscriber("/reset_odom", Bool, self.resetCB)
+        swri_rospy.Timer(rospy.Duration(1/self.rate), self.update)
         self.odomPub = rospy.Publisher("odom", Odometry,queue_size=10)
         self.odomBroadcaster = TransformBroadcaster()
 
     #############################################################################
+    def resetCB(self,msg):
+    #############################################################################
+        if msg.data:
+            self.x = 0                 
+            self.y = 0
+            self.th = 0
+            rospy.loginfo("Odometry is resetted")
+
+    #############################################################################
     def spin(self):
     #############################################################################
-        r = rospy.Rate(self.rate)
-        while not rospy.is_shutdown():
-            self.update()
-            r.sleep()
+        swri_rospy.spin()
 
 
     #############################################################################
-    def update(self):
+    def update(self, event):
     #############################################################################
         if self.new_dataL and self.new_dataR:
             now = rospy.Time.now()
-            if now > self.t_next:
-                elapsed = now - self.then
-                self.then = now
-                elapsed = elapsed.to_sec()
+            
+            elapsed = now - self.then
+            self.then = now
+            elapsed = elapsed.to_sec()
 
 
-                # calculate odometry
-                if self.enc_left == None or self.enc_right == None:
-                    d_left = 0
-                    d_right = 0
-                else:
-                    d_left =  -1 * (self.left - self.enc_left) / self.ticks_meter
-                    d_right =  (self.right - self.enc_right) / self.ticks_meter
-                self.enc_left = self.left
-                self.enc_right = self.right
+            # calculate odometry
+            if self.enc_left == None or self.enc_right == None:
+                d_left = 0
+                d_right = 0
+            else:
+                d_left =  -1 * (self.left - self.enc_left) / self.ticks_meter
+                d_right =  (self.right - self.enc_right) / self.ticks_meter
+            self.enc_left = self.left
+            self.enc_right = self.right
 
-                # distance traveled is the average of the two wheels
-                d = ( d_left + d_right ) / 2
-                # this approximation works (in radians) for small angles
-                th = ( d_right - d_left ) / self.base_width
-                # calculate velocities
-                self.dx = d / elapsed
-                self.dr = th / elapsed
+            # distance traveled is the average of the two wheels
+            d = ( d_left + d_right ) / 2
+            # this approximation works (in radians) for small angles
+            th = ( d_right - d_left ) / self.base_width
+            # calculate velocities
+            self.dx = d / elapsed
+            self.dr = th / elapsed
 
 
 
-                if (d != 0):
-                    # calculate distance traveled in x and y
-                    x = cos( th ) * d
-                    y = -sin( th ) * d
-                    # calculate the final position of the robot
-                    self.x = self.x + ( cos( self.th ) * x - sin( self.th ) * y )
-                    self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
-                if( th != 0):
-                    self.th = self.th + th
+            if (d != 0):
+                # calculate distance traveled in x and y
+                x = cos( th ) * d
+                y = -sin( th ) * d
+                # calculate the final position of the robot
+                self.x = self.x + ( cos( self.th ) * x - sin( self.th ) * y )
+                self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
+            if( th != 0):
+                self.th = self.th + th
 
-                # publish the odom information
-                quaternion = Quaternion()
-                quaternion.x = 0.0
-                quaternion.y = 0.0
-                quaternion.z = sin( self.th / 2 )
-                quaternion.w = cos( self.th / 2 )
-                self.odomBroadcaster.sendTransform(
-                    (self.x, self.y, 0),
-                    (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
-                    rospy.Time.now(),
-                    self.base_frame_id,
-                    self.odom_frame_id
-                    )
+            # publish the odom information
+            quaternion = Quaternion()
+            quaternion.x = 0.0
+            quaternion.y = 0.0
+            quaternion.z = sin( self.th / 2 )
+            quaternion.w = cos( self.th / 2 )
+            self.odomBroadcaster.sendTransform(
+                (self.x, self.y, 0),
+                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
+                rospy.Time.now(),
+                self.base_frame_id,
+                self.odom_frame_id
+                )
 
-                odom = Odometry()
-                odom.header.stamp = now
-                odom.header.frame_id = self.odom_frame_id
-                odom.pose.pose.position.x = self.x
-                odom.pose.pose.position.y = self.y
-                odom.pose.pose.position.z = 0
-                odom.pose.pose.orientation = quaternion
-                odom.child_frame_id = self.base_frame_id
-                odom.twist.twist.linear.x = self.dx
-                odom.twist.twist.linear.y = 0
-                odom.twist.twist.angular.z = self.dr
-                self.odomPub.publish(odom)
-                self.new_dataL = False
-                self.new_dataR = False
+            odom = Odometry()
+            odom.header.stamp = now
+            odom.header.frame_id = self.odom_frame_id
+            odom.pose.pose.position.x = self.x
+            odom.pose.pose.position.y = self.y
+            odom.pose.pose.position.z = 0
+            odom.pose.pose.orientation = quaternion
+            odom.child_frame_id = self.base_frame_id
+            odom.twist.twist.linear.x = self.dx
+            odom.twist.twist.linear.y = 0
+            odom.twist.twist.angular.z = self.dr
+            self.odomPub.publish(odom)
+            self.new_dataL = False
+            self.new_dataR = False
 
 
 
