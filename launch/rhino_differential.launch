@@ -59,6 +59,5 @@
           />
 
             <!-- start rviz -->
-  <node pkg="rviz" type="rviz" name="my_rviz" 
-  args="-d $(find robot_base)/config.rviz"/>
+  <node pkg="rviz" type="rviz" name="my_rviz" />
 </launch>
